@@ -225,6 +225,8 @@ python tools/make_scesys_generic.py ./sce_sys ./logo.png ./alt.png "Angel Sex Pe
 │   ├── psv_input.rpyc
 │   ├── psv_keys.rpy              # ○ 确认 / × 返回
 │   ├── psv_keys.rpyc
+│   ├── psv_fontmem.rpy           # 字体整块读内存（3.7× 提升）
+│   ├── psv_fontmem.rpyc
 │   ├── psv_diag.rpy              # 性能探针（FRAME / TEXT / IMG / PAD）
 │   └── psv_diag.rpyc
 ├── tools/
@@ -254,7 +256,9 @@ python tools/make_scesys_generic.py ./sce_sys ./logo.png ./alt.png "Angel Sex Pe
 * 日文字体（16 MB）尚未子集化，首次使用有约 1.7s 停顿，见上述文档「方向 2」
 * 游戏内首次显示某张 CG 时仍会有短暂停顿（解码），降采样后已大幅改善
 * 视频播放不支持（renpy-vita 的已知限制）
-* 退出游戏会崩（renpy-vita 的已知问题，不影响存档）
+* **退出时可能卡死**（renpy-vita 在 SDL/GL 拆卸阶段的老问题，不影响存档）。
+  建议：**在游戏内存档后，从 LiveArea 关闭应用**，不要用游戏内退出或 PS 键退出
+* 语音/音效保持原始 OGG，**未做任何降采样或重编码**
 
 ### 已优化项（实测）
 
