@@ -1,4 +1,4 @@
-# Angel Sex Pet — PS Vita 移植
+﻿# Angel Sex Pet — PS Vita 移植
 
 把 Cherry Kiss Games 的 Ren'Py 游戏《Angel Sex Pet》(聖天使シャーロット) 移植到
 PS Vita 的完整方案。
@@ -234,11 +234,13 @@ python tools/make_scesys_generic.py ./sce_sys ./logo.png ./alt.png "Angel Sex Pe
 │   ├── jpeg_recompress.py
 │   ├── rpa_tool.py
 │   ├── selfcheck_package.py   # 发版前 84 项自查
+│   ├── slim_archives.py       # 归档瘦身（删 .rpy / 上报库）
 │   └── make_scesys_generic.py
 └── docs/
     ├── 移植记录.md              # 完整踩坑过程
     ├── 性能分析-文字渲染.md      # 卡顿根因分析与优化方向
-    └── 移植总结-CherryKiss系.md  # 同类作品可复用的移植手册
+    ├── 移植总结-CherryKiss系.md  # 同类作品可复用的移植手册
+    └── 启动优化计划.md          # 70 秒启动的构成与优化方向
 ```
 
 ---
@@ -272,14 +274,17 @@ python tools/make_scesys_generic.py ./sce_sys ./logo.png ./alt.png "Angel Sex Pe
 
 | 产物 | 大小 | SHA256（前 32 位） |
 |---|---|---|
-| `AngelSexPet_v4_Runtime.vpk` | 13.87 MiB | `09B48AF0DDC3EDCA4E7626AE40218DB2` |
-| `AngelSexPet_v4_Full.vpk` | 125.88 MiB | `A85ACDE5D4EABD7B3094E4546072F464` |
-| `AngelSexPet_v4_NoNpDrm.zip` | 125.89 MiB | `16C85F902059A4A61FAA0DCADFD5223F` |
+| `AngelSexPet_v4_Runtime.vpk` | 13.87 MiB | `2FE0456CD017ADBB5A94D45B7E3264C5` |
+| `AngelSexPet_v4_Full.vpk` | 124.63 MiB | `858DF33A83ED093D33E4296AA31A97AB` |
+| `AngelSexPet_v4_NoNpDrm.zip` | 124.63 MiB | `6DB34447D3A720F5D14A8C2B6C357AAD` |
 
 **Runtime 包**只含运行时，可公开分发；**Full 包**含游戏数据，仅限自用。
 
-v4 相对 v3 的差异：新增 `game/psv_fontmem.rpyc`（字体整块读内存）；
-发布包**不含** `psv_diag.rpyc`（诊断探针，每帧计时有额外开销）。
+v4 相对 v3 的差异：
+- 新增 `game/psv_fontmem.rpyc`（字体整块读内存，进设置 10.23s → 2.76s）
+- 发布包**不含** `psv_diag.rpyc`（诊断探针，每帧计时有额外开销）
+- 归档瘦身：删掉归档里运行时永不读取的 `.rpy` 源码和 `python-packages/`
+  （requests/urllib3，上报已被补丁挡住），`archive.rpa` 4.98 → 1.78 MB
 
 ---
 
