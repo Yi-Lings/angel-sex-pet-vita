@@ -94,6 +94,31 @@ git clone <this-repo>
 # https://www.renpy.org/dl/7.4.9/renpy-7.4.9-sdk.zip
 ```
 
+**完整环境要求**（同类作品通用，详见
+[docs/移植总结-CherryKiss系.md](docs/移植总结-CherryKiss系.md)）：
+
+| 组件 | 版本 | 用途 |
+|---|---|---|
+| Ren'Py SDK | 7.4.9 | 编译 `.rpyc`、lint |
+| renpy-vita 运行时 | SonicMastr/renpy-vita | Vita 引擎本体（`eboot.bin` = 7,732,057 B） |
+| Python | 3.11+ | 跑 `tools/*.py` |
+| Pillow | ≥ 10 | 图片降采样 / 转码 |
+| fontTools | ≥ 4.4x | 字体子集化（自带 cu2qu） |
+| unrpyc | CensoredUsername/unrpyc | 反编译 `.rpyc` 供检查 |
+| libshacccg.suprx | 自制系统 | GL 程序硬前置，必须在 `ur0:/data/` |
+
+**运行时三个文件必须是原版尺寸**（换过会出问题）：
+
+```
+eboot.bin            7,732,057 B
+renpy.py                 6,722 B
+lib/python27.zip     3,919,486 B
+renpy/common/        336 个文件（54 个 .rpyc + 15 个 .rpymc）
+```
+
+> `renpy/common` 必须**从能跑的设备上整目录复制**，不能用 PC SDK 编出来的版本
+> —— 运行时是 `7.4.9.0u`，与 PC 的 `7.4.9.2142` 编译产物不兼容（铁律 21）。
+
 把环境变量设为你的 SDK 路径：
 
 ```bash
@@ -208,10 +233,12 @@ python tools/make_scesys_generic.py ./sce_sys ./logo.png ./alt.png "Angel Sex Pe
 │   ├── optimize_images.py
 │   ├── jpeg_recompress.py
 │   ├── rpa_tool.py
+│   ├── selfcheck_package.py   # 发版前 84 项自查
 │   └── make_scesys_generic.py
 └── docs/
     ├── 移植记录.md              # 完整踩坑过程
-    └── 性能分析-文字渲染.md      # 卡顿根因分析与优化方向
+    ├── 性能分析-文字渲染.md      # 卡顿根因分析与优化方向
+    └── 移植总结-CherryKiss系.md  # 同类作品可复用的移植手册
 ```
 
 ---
@@ -237,6 +264,22 @@ python tools/make_scesys_generic.py ./sce_sys ./logo.png ./alt.png "Angel Sex Pe
 | `renpy.input` 屏幕键盘 | 修掉改名卡死 |
 | 按键映射 | ○ 确认 / × 返回（PS 系习惯） |
 | **字体整块读入内存** | **进设置整帧 10.23s → 2.76s（3.7×）** |
+
+### 构建产物
+
+`dist/` 目录不在仓库内（见 `.gitignore`：`*.vpk` / `*.rpa` 均被排除）。
+本地构建记录如下，便于校验自己打的包是否一致：
+
+| 产物 | 大小 | SHA256（前 32 位） |
+|---|---|---|
+| `AngelSexPet_v4_Runtime.vpk` | 13.87 MiB | `09B48AF0DDC3EDCA4E7626AE40218DB2` |
+| `AngelSexPet_v4_Full.vpk` | 125.88 MiB | `A85ACDE5D4EABD7B3094E4546072F464` |
+| `AngelSexPet_v4_NoNpDrm.zip` | 125.89 MiB | `16C85F902059A4A61FAA0DCADFD5223F` |
+
+**Runtime 包**只含运行时，可公开分发；**Full 包**含游戏数据，仅限自用。
+
+v4 相对 v3 的差异：新增 `game/psv_fontmem.rpyc`（字体整块读内存）；
+发布包**不含** `psv_diag.rpyc`（诊断探针，每帧计时有额外开销）。
 
 ---
 
