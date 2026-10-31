@@ -195,15 +195,23 @@ python tools/make_scesys_generic.py ./sce_sys ./logo.png ./alt.png "Angel Sex Pe
 │   ├── psv_skip_telemetry.rpy    # 跳过上报的补丁源码
 │   ├── psv_skip_telemetry.rpyc   # 预编译版（794 字节）
 │   ├── psv_perf.rpy              # 性能配置
-│   └── psv_perf.rpyc             # 预编译版（928 字节）
+│   ├── psv_perf.rpyc             # 预编译版
+│   ├── psv_input.rpy             # renpy.input 屏幕键盘（修改名卡死）
+│   ├── psv_input.rpyc
+│   ├── psv_keys.rpy              # ○ 确认 / × 返回
+│   ├── psv_keys.rpyc
+│   ├── psv_diag.rpy              # 性能探针（FRAME / TEXT / IMG / PAD）
+│   └── psv_diag.rpyc
 ├── tools/
 │   ├── fix_script_version.py
 │   ├── fix_telemetry.py
 │   ├── optimize_images.py
+│   ├── jpeg_recompress.py
 │   ├── rpa_tool.py
 │   └── make_scesys_generic.py
 └── docs/
-    └── debugging.md              # 崩溃排查手册
+    ├── 移植记录.md              # 完整踩坑过程
+    └── 性能分析-文字渲染.md      # 卡顿根因分析与优化方向
 ```
 
 ---
@@ -211,9 +219,21 @@ python tools/make_scesys_generic.py ./sce_sys ./logo.png ./alt.png "Angel Sex Pe
 ## 已知问题
 
 * 启动仍需约 40-70 秒（Vita 存储卡慢 + Ren'Py 要解 300 MB 的 rpa 索引）
+* **操作卡顿：文字渲染是唯一瓶颈**（占 89–99%），根因分析见
+  [docs/性能分析-文字渲染.md](docs/性能分析-文字渲染.md)。修复方向已定位，尚未实装
 * 游戏内首次显示某张 CG 时仍会有短暂停顿（解码），降采样后已大幅改善
 * 视频播放不支持（renpy-vita 的已知限制）
 * 退出游戏会崩（renpy-vita 的已知问题，不影响存档）
+
+### 已优化项（实测）
+
+| 项 | 结果 |
+|---|---|
+| 素材降采样 + 转 JPEG | img 137.8 MB → 9.6 MB，gui 54.5 MB → 14.2 MB |
+| CJK 字体子集化 | 3 × 17 MB → 3 × 4.1 MB |
+| 删无用翻译 | 启动快约 20 秒 |
+| `renpy.input` 屏幕键盘 | 修掉改名卡死 |
+| 按键映射 | ○ 确认 / × 返回（PS 系习惯） |
 
 ---
 
