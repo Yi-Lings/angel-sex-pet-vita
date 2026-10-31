@@ -1,0 +1,6 @@
+﻿__pycache__/
+*.pyc
+*.tmp
+# 不含游戏本体
+*.rpa
+*.vpk
