@@ -1,25 +1,24 @@
 init -9 python:
-    # PS Vita 性能调优（2026-10-31）
+    # PS Vita 性能调优 v2（2026-10-31）
     #
-    # 依据：
-    #   * Vita 可用内存约 330 MB，renpy.py 里写死 RENPY_LESS_MEMORY=True，
-    #     会关掉 im.py 里 keep_preloading 那段的 pinned 预加载；
-    #   * 默认 image_cache_size_mb=300（见 renpy/config.py:100），
-    #     在 Vita 上等于「永不淘汰」，会把内存吃满然后疯狂 GC；
-    #   * hard_rollback_limit=100 每次交互都存状态，弱 CPU 上开销明显。
+    # v1 的教训：把 image_cache_size_mb 从 300 压到 64 是错的。
+    # 缓存装不下游戏的工作集，每次交互都在淘汰→重读→重解码，
+    # 单次按钮响应反而从几秒恶化到 15 秒。
+    #
+    # 结论：缓存宁大勿小，只要不超过机器实际可用内存。
 
-    # 图片缓存压到 64 MB：够放 ~20 张 1024x768 RGBA，超出就淘汰最旧的。
-    # 比默认 300 MB 低，但 Vita 上 300 MB 根本给不出来。
-    config.image_cache_size_mb = 64
+    # 192 MB ≈ 60 张 1024x768 RGBA 贴图。
+    # Vita 可用约 330 MB，扣掉 Python 运行时和字体后还能放下。
+    config.image_cache_size_mb = 192
 
-    # 回滚记录从 100 降到 20。Vita 上每次 interaction 都要深拷贝 store，
-    # 100 层会明显拖慢；20 层足够玩家反悔几步。
+    # 预测保持默认 32。预测是在后台线程预读下一批图片，
+    # 调小只会让交互时同步读盘，越调越卡。
+    config.predict_statements = 32
+
+    # 回滚层数从 100 降到 20：每层都要保存 store 快照，
+    # 弱 CPU 上省下的是实打实的内存和拷贝时间。
     config.hard_rollback_limit = 20
 
-    # 少预测几步。默认 32 在读取慢的存储卡上会一次性读进大量资源，
-    # 反而挤占解码线程的时间。
-    config.predict_statements = 16
-
-    # 自动存档本身就是一次完整序列化 + 写卡，Vita 上是很明显的顿挫。
-    # 关掉，改由玩家手动存档（游戏里「另存为」照常可用）。
+    # 自动存档 = 一次完整序列化 + 写存储卡，Vita 上顿挫很明显。
+    # 关掉，玩家手动存档照常可用。
     config.autosave_frequency = None
